@@ -94,4 +94,6 @@ G$aboveTheLine = FALSE # Dalezman's above the line scoring?
 # source("freeRecallDalezman.R")
 
 # ---- free-versus-serial
-source("freeVsSerial.R")
+# source("freeVsSerial.R")
+
+

@@ -174,6 +174,10 @@ model <- function(G,P,durs=NULL){
     
     nGroups <- length(groupStruct)
     
+    if (G$recombine){
+      groupsLeft <- as.numeric(strsplit(as.character(G$probeSeq), "")[[1]])
+    }
+    
     #### Retrieval ####
     newGroup <- TRUE # are we recalling a new group (yes we are)?
     groupCount = 0  # how many groups (including current one) recalled so far?
@@ -203,6 +207,11 @@ model <- function(G,P,durs=NULL){
     useLast <- runif(1) < P$lastProb # start with last group
     onlyLast <- runif(1) < P$onlyLastProb # start with last and then stop (see Simulation 8)
     useStart <- runif(1) < P$firstCue # did we nominally encode first group irrespective of preceding factors
+    if (G$recombine){
+      doRecombine <- runif(1) < (1-P$recombine_freeprob) # in recombination, do we actually do recombination (vs free recall)
+    } else {
+      doRecombine <- FALSE
+    }
     
     litem <- 1
     
@@ -227,6 +236,7 @@ model <- function(G,P,durs=NULL){
         c_NC <- c_LC*0 # initialise, is usually modified below
         
         if (G$task=="free"){
+          
           if ((groupCount==1) && (G$retention=="immed") && G$Dalezman && (G$dalCue<4)){
             if (G$dalCue==1){
               dCue <- 1
@@ -247,7 +257,34 @@ model <- function(G,P,durs=NULL){
             c_NC <- sapply(groupStruct, function(x){
               ifelse(x$groupPos==dCue,P$etaNC,0)
             })
+            
             if (dCue==nG){
+              cueForEnd <- TRUE
+            }
+            
+          } else if (G$recombine && doRecombine && (length(groupsLeft)>0)){
+            G$dalCue <- sample(groupsLeft, 1)
+            
+            if (G$dalCue==1){
+              dCue <- 1
+            } else if (G$dalCue==3){
+              dCue <- nG
+            } else if (G$dalCue==2){
+              if (nG>3){ # if there isn't one identifiable "middle group", randomly select
+                if (runif(1)<0){
+                  dCue <- sample(2:(nG-1),1,prob = rep(1,nG-2))
+                } else {
+                  dCue <- ceiling(nG/2)
+                }
+              } else {
+                dCue <- 2
+              }
+            } 
+            
+            c_NC <- sapply(groupStruct, function(x){
+              ifelse(x$groupPos==dCue,P$etaNC,0)
+            })
+            if (dCue==nG && (groupCount==1)){
               cueForEnd <- TRUE
             }
           } else if ((groupCount==1) && (G$retention=="immed") && (useLast || onlyLast)){
@@ -299,6 +336,7 @@ model <- function(G,P,durs=NULL){
         } else {
           # winner-takes-all selection of a group
           currGroup <- which.max(c_LC + c_NC)
+          
           currExpPos <- groupStruct[[currGroup]]$expPos
           
           # add on time taken to retrieve group context
@@ -329,6 +367,9 @@ model <- function(G,P,durs=NULL){
         gSuppress[currGroup] <- TRUE
         
         recGroups <- c(recGroups, currGroup)
+        if (G$recombine && doRecombine){
+          groupsLeft <- setdiff(groupsLeft, currGroup)
+        }
         
         newGroup <- FALSE
         
@@ -454,19 +495,28 @@ model <- function(G,P,durs=NULL){
           tRT <- c(tRT, rep(NA, lRemain))
           tCumRT <- c(tCumRT, rep(NA, lRemain))
           givingUp <- TRUE # don't do any more scoring
+          #print("decided to give up")
           if (G$task!="free"){
             updateLitem <- 1 #keep ticking through to record probed positions for remaining omissions
           } else {
             updateLitem <- 10000 #force exit from trial
           }
         } else if (gOmm > P$T_G){
+          #print("to many omissions")
           newGroup = TRUE
         }
       }
       
       # Start new group if reached length of current group (assumed to be known)
       if (inGroupCount==groupStruct[[currGroup]]$groupSize){
-        newGroup=TRUE
+        #print("reached end of current")
+        newGroup <- TRUE
+      }
+      
+      # Start new group if recombining and have recalled an item from this group
+      if (G$recombine && doRecombine && (length(groupsLeft)>0) && ((itptr>0) && (!givingUp))){
+        #print("this happened")
+        newGroup <- TRUE
       }
       
       if (((newGroup) && (groupCount==1) && (G$aboveTheLine)) ||

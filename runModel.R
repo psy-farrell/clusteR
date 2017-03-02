@@ -1,5 +1,6 @@
 rm(list = ls())
-graphics.off()
+#graphics.off()
+# dev.off()
 
 # ---- libraries ---- #
 library(foreach)
@@ -7,6 +8,7 @@ library(plyr)
 library(dplyr)
 library(farrellLab)
 library(farrellMem)
+library(ggplot2)
 
 # ---- intialisation ---- #
 G <- list()
@@ -14,14 +16,14 @@ P <- list()
 
 G$seed <- 15437
 
-G$nruns <- 1000
+G$nruns <- 10000
 G$init <- TRUE
 
 P$gNoise = 0.02 # 0.02 #sigma_L in paper
 P$wNoise = 0.02 #.02 #%sigma_GP in paper
 
 P$pWeight = 0.3 # weighting of positional (vs group) information
-# labelled rho in the paper
+# labelled rho in the paper (see correction)
 P$gWeight = 1-P$pWeight
 
 P$iPrimacy <- 0.03 # reduction in encoding across items within groups
@@ -55,6 +57,8 @@ P$iRT = .4
 
 G$Dalezman = FALSE # Are we doing Dalezman cueing? Set to 0 by default; set to 1 in Dalezman.m
 G$aboveTheLine = FALSE # Dalezman's above the line scoring?
+
+G$recombine <- FALSE
 
 ## Here are all the different simulations
 # Comment out the one you want to run
@@ -95,5 +99,8 @@ G$aboveTheLine = FALSE # Dalezman's above the line scoring?
 
 # ---- free-versus-serial
 # source("freeVsSerial.R")
+
+# ---- free-recombination
+source("freeRecallRecombination.R")
 
 

@@ -1,8 +1,3 @@
-# TODO:
-
-# 2. Model starts too often at start of group in other condition. Starting at the start of group is fine (PFR generally looks OK), but data imply that ppl then e.g. use next serial position rather than re-setting. Effect could also be explained by assuming that ppl try and recall multiple items from a group, or prob mix of recombination and standard free recall? <-- THIS, ONE OF YOUR IDEAS WAS TO SEE IF PPL SIMPLY DO FREE RECALL
-
-
 # ---- functions yo ----
 uniqGroups <- function(indat){
   trials <- unique(indat$trial)
@@ -68,23 +63,6 @@ G$durs <- function(ll){
   x[c(1,5,9)] <- 1.25+1.5
   return(x)
 } 
-
-# P$Gfun <- function(x){ 
-#   P$gCurrent <- runif(1)<P$gMix
-#   if (P$gCurrent){
-#     return(rep(4,x))
-#   } else {
-#     return(sample.int(6, x, TRUE, c(5,4,6,5,2,1)))
-#   }
-# }
-# 
-# P$Gendfun <- function(x){
-#   if (P$gCurrent){
-#     return(4)
-#   } else {
-#     return(sample.int(6, 1, TRUE, c(5,4,6,5,2,1)))
-#   }
-# }
 
 allSPC <- {}
 allFRP <- {}
